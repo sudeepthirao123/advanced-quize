@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Quiz Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #quiz, #results {
+            display: none;
+        }
+        #question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .option {
+            padding: 10px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .option:hover {
+            background-color: #d0d0d0;
+        }
+        #timer {
+            text-align: right;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        #next-btn, #start-btn, #restart-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        #results {
+            text-align: center;
+        }
+        #score {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced Quiz Application</h1>
+        <div id="start-screen">
+            <p>Welcome to the quiz! You'll have 30 seconds for each question. Good luck!</p>
+            <button id="start-btn">Start Quiz</button>
+        </div>
+        <div id="quiz">
+            <div id="timer">Time left: 30s</div>
+            <div id="question"></div>
+            <div class="options">
+                <button class="option" data-index="0"></button>
+                <button class="option" data-index="1"></button>
+                <button class="option" data-index="2"></button>
+                <button class="option" data-index="3"></button>
+            </div>
+            <button id="next-btn">Next Question</button>
+        </div>
+        <div id="results">
+            <h2>Quiz Completed!</h2>
+            <div id="score"></div>
+            <button id="restart-btn">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "What is the capital of France?",
+                options: ["London", "Berlin", "Paris", "Madrid"],
+                correct: 2
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Mars", "Jupiter", "Venus", "Saturn"],
+                correct: 0
+            },
+            {
+                question: "Who painted the Mona Lisa?",
+                options: ["Van Gogh", "Da Vinci", "Picasso", "Rembrandt"],
+                correct: 1
+            },
+            {
+                question: "What is the largest ocean on Earth?",
+                options: ["Atlantic", "Indian", "Arctic", "Pacific"],
+                correct: 3
+            },
+            {
+                question: "Which element has the chemical symbol 'O'?",
+                options: ["Gold", "Silver", "Oxygen", "Carbon"],
+                correct: 2
+            }
+        ];
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz');
+        const resultsScreen = document.getElementById('results');
+        const startBtn = document.getElementById('start-btn');
+        const questionEl = document.getElementById('question');
+        const optionEls = document.querySelectorAll('.option');
+        const nextBtn = document.getElementById('next-btn');
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+        const restartBtn = document.getElementById('restart-btn');
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timer;
+
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', loadNextQuestion);
+        restartBtn.addEventListener('click', restartQuiz);
+
+        optionEls.forEach(option => {
+            option.addEventListener('click', () => selectOption(option));
+        });
+
+        function startQuiz() {
+            startScreen.style.display = 'none';
+            quizScreen.style.display = 'block';
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = quizData[currentQuestion];
+            questionEl.textContent = question.question;
+            
+            question.options.forEach((option, index) => {
+                optionEls[index].textContent = option;
+                optionEls[index].classList.remove('selected', 'correct', 'incorrect');
+            });
+
+            nextBtn.style.display = 'none';
+            startTimer();
+        }
+
+        function selectOption(option) {
+            clearInterval(timer);
+            const selectedIndex = parseInt(option.getAttribute('data-index'));
+            const question = quizData[currentQuestion];
+
+            optionEls.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+
+            if (selectedIndex === question.correct) {
+                score++;
+                option.classList.add('correct');
+            } else {
+                option.classList.add('incorrect');
+                optionEls[question.correct].classList.add('correct');
+            }
+
+            nextBtn.style.display = 'block';
+        }
+
+        function loadNextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function startTimer() {
+            let timeLeft = 30;
+            timerEl.textContent = `Time left: ${timeLeft}s`;
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = `Time left: ${timeLeft}s`;
+
+                if (timeLeft === 0) {
+                    clearInterval(timer);
+                    loadNextQuestion();
+                }
+            }, 1000);
+        }
+
+        function showResults() {
+            quizScreen.style.display = 'none';
+            resultsScreen.style.display = 'block';
+            scoreEl.textContent = `You scored ${score} out of ${quizData.length}`;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            resultsScreen.style.display = 'none';
+            startScreen.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
